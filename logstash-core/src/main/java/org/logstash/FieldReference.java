@@ -1,5 +1,7 @@
 package org.logstash;
 
+import org.jruby.util.ByteList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -155,13 +157,13 @@ public final class FieldReference {
                     splitPoint = 1;
                 }
                 if (i > splitPoint) {
-                    path.add(reference.subSequence(splitPoint, i).toString().intern());
+                    path.add(getInternedStringWithEncoding(reference.subSequence(splitPoint, i)));
                 }
                 splitPoint = i + 1;
             }
         }
         if (splitPoint < length || length == 0) {
-            path.add(reference.subSequence(splitPoint, length).toString().intern());
+            path.add(getInternedStringWithEncoding(reference.subSequence(splitPoint, length)));
         }
         path.trimToSize();
         final String key = path.remove(path.size() - 1).intern();
@@ -176,4 +178,12 @@ public final class FieldReference {
                 new FieldReference(path.toArray(EMPTY_STRING_ARRAY), key, DATA_CHILD));
         }
     }
+
+    private static String getInternedStringWithEncoding(CharSequence seq) {
+        if ( seq instanceof ByteList ) {
+            ByteList bl = (ByteList)seq;
+            return ByteList.decode(bl.getUnsafeBytes(), bl.getEncoding().toString()).intern();
+        }
+        return seq.toString().intern();
+    }    
 }
